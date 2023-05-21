@@ -37,8 +37,65 @@ BEGIN
     lower_port => 80,
     upper_port => 80,
     ace        => xs$ace_type(privilege_list => xs$name_list('http'),
-                              principal_name => 'FIN',
+                              principal_name => 'SHELLY',
                               principal_type => xs_acl.ptype_db)); 
 END;
 /
+```
+The following procedure fetches the data from the plug and inserts it in the database.
+```
+create or replace PROCEDURE getplugstatus AS
+  req   UTL_HTTP.REQ;
+  resp  UTL_HTTP.RESP;
+  value VARCHAR2(1024);
+BEGIN
+  for c1_rec in (select seq# 
+    , hostname
+    from plug
+    order by 1)
+  LOOP
+    BEGIN
+      req := UTL_HTTP.BEGIN_REQUEST('http://'||c1_rec.hostname||'/rpc/Switch.GetStatus?id=0');
+      UTL_HTTP.SET_HEADER(req, 'User-Agent', 'Mozilla/4.0');
+      resp := UTL_HTTP.GET_RESPONSE(req);
+      LOOP
+        UTL_HTTP.READ_LINE(resp, value, TRUE);
+        DBMS_OUTPUT.PUT_LINE(value);
+        insert into plugstatus(plugseq#, data) values (c1_rec.seq#, value);
+      END LOOP;
+      UTL_HTTP.END_RESPONSE(resp);
+    EXCEPTION
+      WHEN UTL_HTTP.END_OF_BODY THEN
+        UTL_HTTP.END_RESPONSE(resp);
+      WHEN others THEN
+        DBMS_OUTPUT.PUT_LINE('other error');
+    END;
+  END LOOP;
+END;
+```
+Create a job to collect the data every minute
+```
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB (
+            job_name => '"SHELLY"."JOB_GET_STATUS"',
+            job_type => 'PLSQL_BLOCK',
+            job_action => 'begin getplugstatus; end;',
+            number_of_arguments => 0,
+            start_date => TO_TIMESTAMP_TZ('2015-11-17 21:35:00.000000000 EUROPE/AMSTERDAM','YYYY-MM-DD HH24:MI:SS.FF TZR'),
+            repeat_interval => 'FREQ=MINUTELY',
+            end_date => NULL,
+            enabled => FALSE,
+            auto_drop => TRUE,
+            comments => 'Get Shelly status every minute');
+ 
+    DBMS_SCHEDULER.SET_ATTRIBUTE( 
+             name => '"SHELLY"."JOB_GET_STATUS"', 
+             attribute => 'store_output', value => TRUE);
+    DBMS_SCHEDULER.SET_ATTRIBUTE( 
+             name => '"SHELLY"."JOB_GET_STATUS"', 
+             attribute => 'logging_level', value => DBMS_SCHEDULER.LOGGING_OFF);
+      
+    DBMS_SCHEDULER.enable(
+             name => '"SHELLY"."JOB_GET_STATUS"');
+END;
 ```
