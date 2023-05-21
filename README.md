@@ -110,4 +110,5 @@ where P.seq#=S.plugseq#
 ```
 As the date is in UTC it is adjusted for CET by adding 7200 to it, this is not a good solution, it should be replaced by a more robust solution.
 ![Freezer power consumption](https://github.com/shinypebbles/Shelly/blob/main/Freezer.png)
+
 Line graph of the freezer power consumption in one day.
