@@ -5,6 +5,7 @@ This project collects data from the [Shelly Plus Plug S](https://www.shelly.clou
 
 The Shelly Plug delivers data in JSON, so let's create a data model to store the data.
 
+```
 CREATE TABLE  "PLUG" 
    (	"SEQ#" NUMBER NOT NULL ENABLE, 
 	"HOSTNAME" VARCHAR2(40) NOT NULL ENABLE, 
@@ -23,11 +24,13 @@ CREATE TABLE  "PLUGSTATUS"
 ALTER TABLE  "PLUGSTATUS" ADD CONSTRAINT "PLUGSTATUS_FK1" FOREIGN KEY ("PLUGSEQ#")
 	  REFERENCES  "PLUG" ("SEQ#") ENABLE
 /
+```
 
 The parent table contains the hostname of the Shelly plugs. The child table contains the collected data.
 
 The data is collected through a REST API call. First we need to allow access to hosts in the network.
 
+```
 BEGIN
   DBMS_NETWORK_ACL_ADMIN.append_host_ace (
     host       => '*', 
@@ -38,3 +41,4 @@ BEGIN
                               principal_type => xs_acl.ptype_db)); 
 END;
 /
+```
