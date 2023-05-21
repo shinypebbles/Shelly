@@ -42,7 +42,7 @@ BEGIN
 END;
 /
 ```
-The following procedure fetches the data from the plug and inserts it in the database.
+The following procedure fetches the [data](https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch/#status) from the plug and inserts it in the database.
 ```
 create or replace PROCEDURE getplugstatus AS
   req   UTL_HTTP.REQ;
@@ -99,3 +99,13 @@ BEGIN
              name => '"SHELLY"."JOB_GET_STATUS"');
 END;
 ```
+The data needed for the graph is selected from the JSON data in the child table.
+```
+select to_number(S.data.apower) as power
+, TO_DATE( '1970-01-01', 'YYYY-MM-DD' ) + NUMTODSINTERVAL( S.data.aenergy.minute_ts+7200, 'SECOND') as date_time, P.seq#
+from plug P, plugstatus S
+where P.seq#=S.plugseq#
+  and P.seq#=:P88_SEQ
+  and trunc(TO_DATE( '1970-01-01', 'YYYY-MM-DD' ) + NUMTODSINTERVAL( S.data.aenergy.minute_ts+7200, 'SECOND'))=trunc(to_date(:P88_DATUM)) order by  TO_DATE( '1970-01-01', 'YYYY-MM-DD' ) + NUMTODSINTERVAL( S.data.aenergy.minute_ts+7200, 'SECOND')
+```
+As the date is in UTC it is adjusted for CET by adding 7200 to it, this is not a good solution, it should be replaced by a more robust solution.
