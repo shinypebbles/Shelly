@@ -47,7 +47,11 @@ BEGIN
 END;
 /
 ```
-The following procedure fetches the [data](https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch/#status) from the plug and inserts it in the database.
+Documentation of the [JSON-format](https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch/#status). Here is an example of the returned JSON:
+```
+{"id":0, "source":"init", "output":true, "apower":0.0, "voltage":236.4, "current":0.047, "aenergy":{"total":3158.258,"by_minute":[0.000,0.000,0.000],"minute_ts":1684960207},"temperature":{"tC":37.5, "tF":99.5}}
+```
+The following procedure fetches the data and inserts it in the database.
 ```
 create or replace PROCEDURE getplugstatus AS
   req   UTL_HTTP.REQ;
