@@ -82,7 +82,7 @@ BEGIN
   END LOOP;
 END;
 ```
-Create a job to collect the data every minute
+Create a job to collect the data every minute.
 ```
 BEGIN
     DBMS_SCHEDULER.CREATE_JOB (
