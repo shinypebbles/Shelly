@@ -26,9 +26,12 @@ CREATE TABLE  "PLUGSTATUS"
 ALTER TABLE  "PLUGSTATUS" ADD CONSTRAINT "PLUGSTATUS_FK1" FOREIGN KEY ("PLUGSEQ#")
 	  REFERENCES  "PLUG" ("SEQ#") ENABLE
 /
+
+CREATE INDEX  "PLUGSTATUS_IND1" ON  "PLUGSTATUS" ("PLUGSEQ#")
+/
 ```
 
-The parent table contains an ID called seq#, the hostname of the Shelly plugs and a name for example freezer. The child table contains a reference to the paren ID and the collected data in JSON-format.
+The parent table contains an ID called seq#, the hostname of the Shelly plugs and a name, for example 'freezer'. The child table contains a reference to the parent ID and the collected data in JSON-format.
 
 The data is collected through a http REST API call. First we need to allow the table owner SHELLY http-access to hosts in the network.
 
