@@ -5,7 +5,7 @@ Collect and process data from Shelly in an Oracle database
 
 This project collects data from the [Shelly Plus Plug S](https://www.shelly.cloud/en/products/shop/shelly-plus-plug-s) and stores it in an Oracle database (v12.1). The data is displayed in a graph using Oracle APEX (v20.1).
 
-The Shelly Plug delivers data in JSON, so let's create a data model to store the data.
+The Shelly Plug delivers data in JSON, so let's create a data model to store the data. The owner of the tables is: SHELLY.
 
 ```
 CREATE TABLE  "PLUG" 
@@ -28,9 +28,9 @@ ALTER TABLE  "PLUGSTATUS" ADD CONSTRAINT "PLUGSTATUS_FK1" FOREIGN KEY ("PLUGSEQ#
 /
 ```
 
-The parent table contains the hostname of the Shelly plugs. The child table contains the collected data.
+The parent table contains an ID called seq#, the hostname of the Shelly plugs and a name for example freezer. The child table contains a reference to the paren ID and the collected data in JSON-format.
 
-The data is collected through a REST API call. First we need to allow access to hosts in the network.
+The data is collected through a http REST API call. First we need to allow the table owner SHELLY http-access to hosts in the network.
 
 ```
 BEGIN
