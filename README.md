@@ -108,7 +108,34 @@ BEGIN
              name => '"SHELLY"."JOB_GET_STATUS"');
 END;
 ```
-The data needed for the graph is selected from the JSON data in the child table.
+The JSON minute_ts field is in Unix epoch format in UTC. So it needs to be converted to CET or CEST. For this 2 functions are created.
+```
+create or replace function cet_cest_offset
+  return NUMBER
+is
+  pl_start date;
+  pl_end date;
+begin
+  pl_start:=NEXT_DAY(to_date('24-03-'||to_char(sysdate, 'YYYY'), 'DD-MM-YYYY'),'SUNDAY');
+  pl_end:=NEXT_DAY(to_date('24-10-'||to_char(sysdate, 'YYYY'), 'DD-MM-YYYY'),'SUNDAY');
+  if sysdate>pl_start and sysdate<pl_end then
+    return 2; --Central European Summer Time (CEST)
+  else
+    return 1; --Central European Time (CET)
+  end if;
+end cet_cest_offset;
+
+create or replace function epoch2cet_cest
+( pl_epoch in number)
+  return date
+is
+  pl_start date;
+  pl_end date;
+begin
+  return TO_DATE('1970-01-01', 'YYYY-MM-DD') + NUMTODSINTERVAL(pl_epoch+cet_cest_offset, 'SECOND');
+end epoch2cet_cest;
+```
+The data needed for the graph is selected from the JSON data in the child table. 
 ```
 select to_number(S.data.apower) as power
 , TO_DATE( '1970-01-01', 'YYYY-MM-DD' ) + NUMTODSINTERVAL( S.data.aenergy.minute_ts+7200, 'SECOND') as date_time, P.seq#
@@ -118,7 +145,6 @@ where P.seq#=S.plugseq#
   and trunc(TO_DATE( '1970-01-01', 'YYYY-MM-DD' ) + NUMTODSINTERVAL( S.data.aenergy.minute_ts+7200, 'SECOND'))=trunc(to_date(:P88_DATUM))
 order by  TO_DATE( '1970-01-01', 'YYYY-MM-DD' ) + NUMTODSINTERVAL( S.data.aenergy.minute_ts+7200, 'SECOND')
 ```
-As the date is in UTC it is adjusted for CET by adding 7200 to it, this is not a good solution, it should be replaced by a more robust solution that takes day light saving into account.
 
 ![Freezer power consumption](https://github.com/shinypebbles/Shelly/blob/main/Freezer.png)
 
