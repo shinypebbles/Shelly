@@ -110,29 +110,24 @@ END;
 ```
 The JSON minute_ts field is in Unix epoch format in UTC. So it needs to be converted to CET or CEST. For this 2 functions are created.
 ```
-create or replace function cet_cest_offset
-  return NUMBER
-is
-  pl_start date;
-  pl_end date;
-begin
-  pl_start:=NEXT_DAY(to_date('24-03-'||to_char(sysdate, 'YYYY'), 'DD-MM-YYYY'),'SUNDAY');
-  pl_end:=NEXT_DAY(to_date('24-10-'||to_char(sysdate, 'YYYY'), 'DD-MM-YYYY'),'SUNDAY');
-  if sysdate>pl_start and sysdate<pl_end then
-    return 2; --Central European Summer Time (CEST)
-  else
-    return 1; --Central European Time (CET)
-  end if;
-end cet_cest_offset;
-
 create or replace function epoch2cet_cest
 ( pl_epoch in number)
   return date
 is
+  pl_date date;
   pl_start date;
   pl_end date;
+  pl_offset number;
 begin
-  return TO_DATE('1970-01-01', 'YYYY-MM-DD') + NUMTODSINTERVAL(pl_epoch+cet_cest_offset, 'SECOND');
+  pl_date:=TO_DATE('1970-01-01', 'YYYY-MM-DD') + NUMTODSINTERVAL(pl_epoch, 'SECOND');
+  pl_start:=NEXT_DAY(to_date('24-03-'||to_char(sysdate, 'YYYY'), 'DD-MM-YYYY'),'SUNDAY');
+  pl_end:=NEXT_DAY(to_date('24-10-'||to_char(sysdate, 'YYYY'), 'DD-MM-YYYY'),'SUNDAY');
+  if pl_date>pl_start and pl_date<pl_end then
+    pl_offset:=2; --Central European Summer Time (CEST)
+  else
+    pl_offset:=1; --Central European Time (CET)
+  end if;
+  return pl_date+pl_offset/24;
 end epoch2cet_cest;
 ```
 The data needed for the graph is selected from the JSON data in the child table. 
