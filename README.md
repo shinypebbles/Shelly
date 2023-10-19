@@ -108,7 +108,7 @@ BEGIN
              name => '"SHELLY"."JOB_GET_STATUS"');
 END;
 ```
-The JSON minute_ts field is in Unix epoch format in UTC. So it needs to be converted to CET or CEST. For this 2 functions are created.
+The JSON minute_ts field is in Unix epoch format in UTC. So it needs to be converted to CET or CEST. For this a function is created.
 ```
 create or replace function epoch2cet_cest
 ( pl_epoch in number)
@@ -133,12 +133,13 @@ end epoch2cet_cest;
 The data needed for the graph is selected from the JSON data in the child table. 
 ```
 select to_number(S.data.apower) as power
-, TO_DATE( '1970-01-01', 'YYYY-MM-DD' ) + NUMTODSINTERVAL( S.data.aenergy.minute_ts+7200, 'SECOND') as date_time, P.seq#
+, epoch2cet_cest(S.data.aenergy.minute_ts) as date_time
+, P.seq#
 from plug P, plugstatus S
 where P.seq#=S.plugseq#
   and P.seq#=:P88_SEQ
-  and trunc(TO_DATE( '1970-01-01', 'YYYY-MM-DD' ) + NUMTODSINTERVAL( S.data.aenergy.minute_ts+7200, 'SECOND'))=trunc(to_date(:P88_DATUM))
-order by  TO_DATE( '1970-01-01', 'YYYY-MM-DD' ) + NUMTODSINTERVAL( S.data.aenergy.minute_ts+7200, 'SECOND')
+  and trunc(epoch2cet_cest(S.data.aenergy.minute_ts))=trunc(to_date(:P88_DATUM))
+order by epoch2cet_cest(S.data.aenergy.minute_ts)
 ```
 
 ![Freezer power consumption](https://github.com/shinypebbles/Shelly/blob/main/Freezer.png)
