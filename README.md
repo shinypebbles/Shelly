@@ -114,20 +114,8 @@ create or replace function epoch2cet_cest
 ( pl_epoch in number)
   return date
 is
-  pl_date date;
-  pl_start date;
-  pl_end date;
-  pl_offset number;
 begin
-  pl_date:=TO_DATE('1970-01-01', 'YYYY-MM-DD') + NUMTODSINTERVAL(pl_epoch, 'SECOND');
-  pl_start:=NEXT_DAY(to_date('24-03-'||to_char(sysdate, 'YYYY'), 'DD-MM-YYYY'),'SUNDAY');
-  pl_end:=NEXT_DAY(to_date('24-10-'||to_char(sysdate, 'YYYY'), 'DD-MM-YYYY'),'SUNDAY');
-  if pl_date>pl_start and pl_date<pl_end then
-    pl_offset:=2; --Central European Summer Time (CEST)
-  else
-    pl_offset:=1; --Central European Time (CET)
-  end if;
-  return pl_date+pl_offset/24;
+  return FROM_TZ(TO_TIMESTAMP('1970-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS') + NUMTODSINTERVAL(pl_epoch, 'SECOND'), 'UTC') AT TIME ZONE 'CET';
 end epoch2cet_cest;
 ```
 The data needed for the graph is selected from the JSON data in the child table. 
