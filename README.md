@@ -8,6 +8,14 @@ This project collects data from the [Shelly Plus Plug S](https://www.shelly.clou
 The Shelly Plug delivers data in JSON, so let's create a data model to store the data. The owner of the tables is: SHELLY.
 
 ```
+CREATE TABLE  "ELECTRICAL_APPLIANCE" 
+   (	"EAP_ID" NUMBER NOT NULL ENABLE, 
+	"NAME" VARCHAR2(40) NOT NULL ENABLE, 
+	 CONSTRAINT "EAP_PK" PRIMARY KEY ("EAP_ID")
+  USING INDEX  ENABLE
+   )
+/
+
 CREATE TABLE  "PLUG" 
    (	"SEQ#" NUMBER NOT NULL ENABLE, 
 	"HOSTNAME" VARCHAR2(40) NOT NULL ENABLE, 
@@ -31,7 +39,7 @@ CREATE INDEX  "PLUGSTATUS_IND1" ON  "PLUGSTATUS" ("PLUGSEQ#")
 /
 ```
 
-The parent table contains an ID called seq#, the hostname of the Shelly plugs and a name, for example 'freezer'. The child table contains a reference to the parent ID and the collected data in JSON-format.
+The table "ELECTRICAL_APPLIANCE" contains an applicance id and the name of the appliance. The parent table "PLUG" contains an ID called seq#, the hostname of the Shelly plugs. The child table "PLUGSTATUS" contains a reference to the parent ID and the collected data in JSON-format.
 
 The data is collected through a http REST API call. First we need to allow the table owner SHELLY http-access to hosts in the network.
 
