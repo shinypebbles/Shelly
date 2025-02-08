@@ -37,9 +37,25 @@ ALTER TABLE  "PLUGSTATUS" ADD CONSTRAINT "PLUGSTATUS_FK1" FOREIGN KEY ("PLUGSEQ#
 
 CREATE INDEX  "PLUGSTATUS_IND1" ON  "PLUGSTATUS" ("PLUGSEQ#")
 /
+
+CREATE TABLE  "CONNECTION" 
+   (	"EAP_ID" NUMBER NOT NULL ENABLE, 
+	"PLUGSEQ#" NUMBER NOT NULL ENABLE, 
+	"STARTDATE" DATE NOT NULL ENABLE, 
+	"ENDDATE" DATE, 
+	 CONSTRAINT "CONNECTION_PK" PRIMARY KEY ("EAP_ID", "PLUGSEQ#", "STARTDATE")
+  USING INDEX  ENABLE
+   )
+/
+ALTER TABLE  "CONNECTION" ADD CONSTRAINT "CONNECTION_FK1" FOREIGN KEY ("EAP_ID")
+	  REFERENCES  "ELECTRICAL_APPLIANCE" ("EAP_ID") ENABLE
+/
+ALTER TABLE  "CONNECTION" ADD CONSTRAINT "CONNECTION_FK2" FOREIGN KEY ("PLUGSEQ#")
+	  REFERENCES  "PLUG" ("SEQ#") ENABLE
+/
 ```
 
-The table "ELECTRICAL_APPLIANCE" contains an applicance id and the name of the appliance. The parent table "PLUG" contains an ID called seq#, the hostname of the Shelly plugs. The child table "PLUGSTATUS" contains a reference to the parent ID and the collected data in JSON-format.
+The table "ELECTRICAL_APPLIANCE" contains an applicance id and the name of the appliance. The parent table "PLUG" contains an ID called seq#, the hostname of the Shelly plugs. The child table "PLUGSTATUS" contains a reference to the parent ID and the collected data in JSON-format. As a plug can be connected to various applicances over time there is a connection table that contains a reference to an applicance and a plug with a time period.
 
 The data is collected through a http REST API call. First we need to allow the table owner SHELLY http-access to hosts in the network.
 
