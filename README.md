@@ -75,16 +75,19 @@ Documentation of the [JSON-format](https://shelly-api-docs.shelly.cloud/gen2/Com
 ```
 {"id":0, "source":"init", "output":true, "apower":0.0, "voltage":236.4, "current":0.047, "aenergy":{"total":3158.258,"by_minute":[0.000,0.000,0.000],"minute_ts":1684960207},"temperature":{"tC":37.5, "tF":99.5}}
 ```
-The following procedure fetches the data and inserts it in the database.
+The following procedure fetches the data of connected plugs and inserts it in the database.
 ```
 create or replace PROCEDURE getplugstatus AS
   req   UTL_HTTP.REQ;
   resp  UTL_HTTP.RESP;
   value VARCHAR2(1024);
 BEGIN
-  for c1_rec in (select seq# 
-    , hostname
-    from plug
+  for c1_rec in (select P.seq# 
+    , P.hostname
+    from plug P
+       , connection C
+    where P.seq#=C.plugseq#
+    and C.enddate is null
     order by 1)
   LOOP
     BEGIN
@@ -101,7 +104,7 @@ BEGIN
       WHEN UTL_HTTP.END_OF_BODY THEN
         UTL_HTTP.END_RESPONSE(resp);
       WHEN others THEN
-        DBMS_OUTPUT.PUT_LINE('other error');
+        DBMS_OUTPUT.PUT_LINE('other error at plug: '||c1_rec.seq#);
     END;
   END LOOP;
 END;
