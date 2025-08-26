@@ -160,3 +160,95 @@ order by epoch2cet_cest(S.data.aenergy.minute_ts)
 ![Freezer power consumption](https://github.com/shinypebbles/Shelly/blob/main/Freezer.png)
 
 Line graph of the freezer power consumption in one day.
+
+Procedure to display current firmware version and available updates
+```
+CREATE OR REPLACE PROCEDURE getplugfirmware AS
+  req              UTL_HTTP.REQ;
+  resp             UTL_HTTP.RESP;
+  json_response    CLOB;
+  fw_id_value      VARCHAR2(100);
+  device_name      VARCHAR2(100);
+  version_only     VARCHAR2(20);
+  available_beta   VARCHAR2(50);
+  available_stable VARCHAR2(50);
+BEGIN
+  FOR c1_rec IN (
+    SELECT P.seq#, P.hostname, P.name
+      FROM plug P
+      JOIN connection C ON P.seq# = C.plugseq#
+     WHERE C.enddate IS NULL
+     ORDER BY 1
+  )
+  LOOP
+    BEGIN
+      ----------------------------------------------------------------------
+      -- 1st API call: Sys.GetConfig
+      ----------------------------------------------------------------------
+      req := UTL_HTTP.BEGIN_REQUEST('http://' || c1_rec.hostname || '/rpc/Sys.GetConfig');
+      UTL_HTTP.SET_HEADER(req, 'User-Agent', 'Mozilla/4.0');
+      resp := UTL_HTTP.GET_RESPONSE(req);
+
+      json_response := NULL;
+      BEGIN
+        UTL_HTTP.READ_TEXT(resp, json_response);
+      EXCEPTION
+        WHEN UTL_HTTP.END_OF_BODY THEN
+          NULL; -- complete response is in json_response
+      END;
+      UTL_HTTP.END_RESPONSE(resp);
+
+      -- Parse fw_id and device name
+      SELECT json_value(json_response, '$.device.fw_id'),
+             json_value(json_response, '$.device.name')
+        INTO fw_id_value, device_name
+        FROM dual;
+
+      SELECT REGEXP_SUBSTR(fw_id_value, '\d+\.\d+\.\d+')
+        INTO version_only
+        FROM dual;
+
+      DBMS_OUTPUT.PUT_LINE('Plug ' || c1_rec.seq# || ' (' || c1_rec.name || ' / ' || device_name || ')');
+      DBMS_OUTPUT.PUT_LINE('  Current firmware: ' || version_only);
+
+      ----------------------------------------------------------------------
+      -- 2nd API call: Sys.GetStatus
+      ----------------------------------------------------------------------
+      req := UTL_HTTP.BEGIN_REQUEST('http://' || c1_rec.hostname || '/rpc/Sys.GetStatus');
+      UTL_HTTP.SET_HEADER(req, 'User-Agent', 'Mozilla/4.0');
+      resp := UTL_HTTP.GET_RESPONSE(req);
+
+      json_response := NULL;
+      BEGIN
+        UTL_HTTP.READ_TEXT(resp, json_response);
+      EXCEPTION
+        WHEN UTL_HTTP.END_OF_BODY THEN
+          NULL;
+      END;
+      UTL_HTTP.END_RESPONSE(resp);
+
+      -- Parse beta and stable update versions
+      SELECT json_value(json_response, '$.available_updates.beta.version'),
+             json_value(json_response, '$.available_updates.stable.version')
+        INTO available_beta, available_stable
+        FROM dual;
+
+      IF available_beta IS NOT NULL THEN
+        DBMS_OUTPUT.PUT_LINE('  Available BETA update: ' || available_beta);
+      END IF;
+
+      IF available_stable IS NOT NULL THEN
+        DBMS_OUTPUT.PUT_LINE('  Available STABLE update: ' || available_stable);
+      END IF;
+
+      DBMS_OUTPUT.PUT_LINE('--------------------------------------------------');
+
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error on plug ' || c1_rec.seq# || ': ' || SQLERRM);
+    END;
+  END LOOP;
+END;
+/
+
+```
