@@ -3,7 +3,7 @@ Collect and process data from Shelly in an Oracle database
 
 ![Shelly Plus Plug S](https://github.com/shinypebbles/Shelly/blob/main/shellyplusplugs.png)
 
-This project collects data from the [Shelly Plus Plug S](https://www.shelly.cloud/en/products/shop/shelly-plus-plug-s) and stores it in an Oracle database (v12.1). The data is displayed in a graph using Oracle APEX (v20.1).
+This project collects data from the Shelly Plus Plug S and stores it in an Oracle database (v12.1). The data is displayed in a graph using Oracle APEX (v22.2).
 
 The Shelly Plug delivers data in JSON, so let's create a data model to store the data. The owner of the tables is: SHELLY.
 
