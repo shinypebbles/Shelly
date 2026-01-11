@@ -1,5 +1,5 @@
 # Shelly
-Collect and process data from Shelly in an Oracle database
+Collect and process data from [Shelly](https://www.shelly.com/) in an Oracle database
 
 ![Shelly Plus Plug S](https://github.com/shinypebbles/Shelly/blob/main/shellyplusplugs.png)
 
